@@ -1,0 +1,48 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject IConfiguration Config
+@using EventHub.Models
+
+
+<PageTitle>EventHub | Events</PageTitle>
+
+<div class="row">
+    @foreach (var eventItem in events)
+    {
+        <EventCard Event="eventItem" OnDelete="HandleDelete" />
+
+    }
+</div>
+
+@code {
+    private string? connectionString;
+    private List<Event> events = new List<Event>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        connectionString = Config.GetConnectionString("default");
+        events = await GetNotesAsync();
+    }
+
+    private async Task<List<Event>> GetNotesAsync()
+    {
+        using (var conn = new MySqlConnection(connectionString))
+        {
+            var sql = "SELECT * FROM event";
+            var rows = await conn.QueryAsync<Event>(sql);
+            return rows.ToList();
+        }
+    }
+
+
+    private void HandleDelete(int id)
+    {
+        var eventToDelete = events.FirstOrDefault(e => e.Id == id);
+        if (eventToDelete != null)
+        {
+            events.Remove(eventToDelete);
+            StateHasChanged();
+        }
+    }
+
+}
