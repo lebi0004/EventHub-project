@@ -1,0 +1,57 @@
+﻿@page "/new"
+@rendermode InteractiveServer
+@using EventHub.Models
+@inject IConfiguration Config
+@inject NavigationManager Navigation
+
+<PageTitle>EventHub | New Event</PageTitle>
+
+<div class="row">
+    <div class="col">
+        <EditForm Model="NewEvent" FormName="EventForm" OnValidSubmit="HandleValidSubmit"
+            class="p-5 bg-light border border-1">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <h2 class="fw-normal text-center mb-3">New Event</h2>
+
+            <div class="row">
+                <div class="col-12 col-md-7 mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <InputText id="title" class="form-control mb-1" @bind-Value="NewEvent.Title" />
+                    <ValidationMessage For="@(() => NewEvent.Title)" />
+                </div>
+
+                <div class="col-12 col-md-5 mb-3">
+                    <label for="date" class="form-label">Date</label>
+                    <InputDate id="date" class="form-control mb-1" @bind-Value="NewEvent.Date" />
+                    <ValidationMessage For="@(() => NewEvent.Date)" />
+                </div>
+
+                <div class="col-12 mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <InputText id="email" type="email" class="form-control mb-1" @bind-Value="NewEvent.Email" />
+                    <ValidationMessage For="@(() => NewEvent.Email)" />
+                </div>
+            </div>
+
+            <button class="btn btn-primary me-3">Add Event</button>
+            <a href="/" class="btn btn-secondary">Cancel</a>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private Event NewEvent { get; set; } = new Event();
+
+    private async Task HandleValidSubmit()
+    {
+        using (var conn = new MySqlConnection(Config.GetConnectionString("default")))
+        {
+            var sql = "INSERT INTO event (Title, Email, Date) VALUES (@Title, @Email, @Date)";
+            await conn.ExecuteAsync(sql, new { NewEvent.Title, NewEvent.Email, NewEvent.Date });
+        }
+
+        Navigation.NavigateTo("/");
+    }
+}
